@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לומדה מלאה - שיווי משקל</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #0d47a1;
+            color: #ffffff;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.5);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #ffffff;
+        }
+        h1 { 
+            text-align: center; 
+            font-size: 48px; 
+            margin-bottom: 40px;
+            color: #ffeb3b;
+            text-shadow: 3px 3px 8px #000;
+        }
+        h2 {
+            font-size: 38px;
+            color: #ffeb3b;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 6px #000;
+        }
+        h3 {
+            font-size: 28px;
+            color: #ffc107;
+            margin: 25px 0 15px 0;
+            text-shadow: 2px 2px 4px #000;
+        }
+        p, li {
+            font-size: 22px;
+            line-height: 1.9;
+            margin-bottom: 15px;
+            color: #ffffff;
+            text-shadow: 1px 1px 3px #000;
+        }
+        ul { padding-right: 30px; }
+        .progress-bar {
+            width: 100%;
+            height: 40px;
+            background: #000;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            border: 3px solid #fff;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #000;
+            transition: width 0.5s;
+        }
+        .slide {
+            background: rgba(255,255,255,0.15);
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            min-height: 500px;
+            border: 3px solid #fff;
+        }
+        button {
+            padding: 20px 40px;
+            font-size: 22px;
+            background: #2196F3;
+            color: #fff;
+            border: 3px solid #fff;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+        }
+        button:hover {
+            background: #1976D2;
+            transform: translateY(-3px);
+        }
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 20px;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 50px;
+        }
+        input[type="password"] {
+            padding: 20px;
+            font-size: 24px;
+            border-radius: 10px;
+            border: 3px solid #fff;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            width: 100%;
+            max-width: 400px;
+        }
+        select {
+            width: 100%;
+            padding: 20px;
+            font-size: 22px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #fff;
+            border: 3px solid #fff;
+            cursor: pointer;
+        }
+        select option { background: #0d47a1; }
+        .slider-label {
+            display: block;
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            color: #ffeb3b;
+            text-shadow: 2px 2px 4px #000;
+        }
+        .equation-box {
+            background: #000;
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            text-align: center;
+            font-size: 32px;
+            color: #ff9800;
+            border: 4px solid #ff9800;
+            direction: ltr;
+            font-weight: bold;
+        }
+        .game-panel {
+            background: rgba(0,0,0,0.6);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 3px solid #fff;
+        }
+        canvas {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .result-box {
+            background: rgba(0,188,212,0.8);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 4px solid #00BCD4;
+            text-align: center;
+        }
+        .result-value {
+            font-size: 48px;
+            font-weight: bold;
+            color: #000;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 לומדה מלאה - שיווי משקל כימי 🧪</h1>
+        <div id="root"></div>
+    </div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const App = () => {
+            const [currentSlide, setCurrentSlide] = useState(0);
+            const [isAuth, setIsAuth] = useState(false);
+            const [password, setPassword] = useState('');
+
+            const slides = [
+                { title: 'שיווי משקל דינמי', component: Slide1 },
+                { title: 'Kc - קבוע שיווי משקל', component: Slide2 },
+                { title: 'Q - מנת התגובה', component: Slide3 },
+                { title: 'עקרון לה שטלייה', component: Slide4 },
+                { title: 'שינוי ריכוז', component: Slide5 },
+                { title: 'שינוי נפח', component: Slide6 },
+                { title: 'שינוי לחץ', component: Slide7 },
+                { title: 'זרז', component: Slide8 },
+                { title: 'טמפרטורה', component: Slide9 },
+                { title: '🎮 המשחק המלא!', component: GameSlide }
+            ];
+
+            const progress = ((currentSlide + 1) / slides.length) * 100;
+            const CurrentComponent = slides[currentSlide].component;
+
+            if (!isAuth) {
+                return (
+                    <div style={{textAlign:'center', padding:'100px 20px'}}>
+                        <h2 style={{marginBottom:'40px', fontSize:'42px', color:'#ffeb3b'}}>🔒 הזן סיסמה</h2>
+                        <input
+                            type="password"
+                            placeholder="סיסמה"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter' && password === 'Hila2025') {
+                                    setIsAuth(true);
+                                }
+                            }}
+                            style={{display:'block', margin:'0 auto 30px'}}
+                        />
+                        <button onClick={() => password === 'Hila2025' && setIsAuth(true)}>
+                            כניסה
+                        </button>
+                        {password && password !== 'Hila2025' && (
+                            <div style={{color:'#ff5252', marginTop:'25px', fontSize:'24px'}}>
+                                ❌ סיסמה שגויה!
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            return (
+                <>
+                    <div className="progress-bar">
+                        <div className="progress-fill" style={{width: `${progress}%`}}>
+                            {Math.round(progress)}% | {currentSlide + 1}/{slides.length}
+                        </div>
+                    </div>
+
+                    <h2 style={{textAlign:'center', marginBottom:'40px'}}>
+                        {slides[currentSlide].title}
+                    </h2>
+
+                    <div className="slide">
+                        <CurrentComponent />
+                    </div>
+
+                    <div className="nav-buttons">
+                        <button 
+                            onClick={() => { setCurrentSlide(currentSlide - 1); window.scrollTo(0,0); }}
+                            disabled={currentSlide === 0}
+                        >
+                            ⏮️ הקודם
+                        </button>
+                        <button
+                            onClick={() => { setCurrentSlide(currentSlide + 1); window.scrollTo(0,0); }}
+                            disabled={currentSlide === slides.length - 1}
+                        >
+                            הבא ⏭️
+                        </button>
+                    </div>
+                </>
+            );
+        };
+
+        const Slide1 = () => {
+            const [forward, setForward] = useState(50);
+            const [backward, setBackward] = useState(50);
+            const isEq = Math.abs(forward - backward) < 5;
+
+            return (
+                <>
+                    <h2>שיווי משקל דינמי</h2>
+                    <p>התגובה לא נעצרת! שני הכיוונים ממשיכים באותו קצב.</p>
+                    <div className="equation-box">A + B ⇄ C + D</div>
+                    
+                    <div style={{margin:'30px 0'}}>
+                        <label className="slider-label">קצב קדימה: {forward}%</label>
+                        <input type="range" min="0" max="100" value={forward} onChange={(e) => setForward(+e.target.value)} />
+                    </div>
+                    
+                    <div style={{margin:'30px 0'}}>
+                        <label className="slider-label">קצב אחורה: {backward}%</label>
+                        <input type="range" min="0" max="100" value={backward} onChange={(e) => setBackward(+e.target.value)} />
+                    </div>
+                    
+                    <div style={{
+                        padding:'40px',
+                        borderRadius:'20px',
+                        textAlign:'center',
+                        fontSize:'38px',
+                        fontWeight:'bold',
+                        background: isEq ? '#4CAF50' : '#f44336',
+                        border: `5px solid ${isEq ? '#fff' : '#000'}`,
+                        marginTop:'30px',
+                        color:'#fff'
+                    }}>
+                        {isEq ? '✅ שיווי משקל!' : '❌ לא בשיווי משקל'}
+                    </div>
+                </>
+            );
+        };
+
+        const Slide2 = () => (
+            <>
+                <h2>Kc - קבוע שיווי משקל</h2>
+                <div className="equation-box">K<sub>c</sub> = [תוצרים] / [מגיבים]</div>
+                <div style={{background:'#f44336', padding:'40px', borderRadius:'20px', border:'5px solid #000', marginTop:'40px'}}>
+                    <h3 style={{fontSize:'34px', color:'#fff', marginBottom:'20px'}}>⚠️ חוק ברזל!</h3>
+                    <p style={{fontSize:'26px', fontWeight:'bold', color:'#fff'}}>
+                        Kc תלוי רק ורק בטמפרטורה!
+                    </p>
+                </div>
+            </>
+        );
+
+        const Slide3 = () => (
+            <>
+                <h2>Q - מנת התגובה</h2>
+                <div className="equation-box">Q = [תוצרים] / [מגיבים]</div>
+                <div style={{marginTop:'40px'}}>
+                    <div style={{background:'#4CAF50', padding:'25px', borderRadius:'15px', marginBottom:'25px', border:'4px solid #000'}}>
+                        <p style={{fontSize:'26px', fontWeight:'bold', color:'#000'}}>Q {'<'} Kc → קדימה (→)</p>
+                    </div>
+                    <div style={{background:'#2196F3', padding:'25px', borderRadius:'15px', marginBottom:'25px', border:'4px solid #000'}}>
+                        <p style={{fontSize:'26px', fontWeight:'bold', color:'#fff'}}>Q {'>'} Kc → אחורה (←)</p>
+                    </div>
+                    <div style={{background:'#FFC107', padding:'25px', borderRadius:'15px', border:'4px solid #000'}}>
+                        <p style={{fontSize:'26px', fontWeight:'bold', color:'#000'}}>Q = Kc → שיווי משקל! (⚖️)</p>
+                    </div>
+                </div>
+            </>
+        );
+
+        const Slide4 = () => (
+            <>
+                <h2>עקרון לה שטלייה</h2>
+                <div style={{background:'#9C27B0', padding:'50px', borderRadius:'20px', border:'5px solid #000'}}>
+                    <p style={{fontSize:'28px', textAlign:'center', fontWeight:'bold', lineHeight:'2', color:'#fff'}}>
+                        כאשר מפריעים למערכת בשיווי משקל,<br/>
+                        המערכת תגיב באופן שמנסה להפחית את ההפרעה
+                    </p>
+                </div>
+                <ul style={{marginTop:'40px', fontSize:'24px'}}>
+                    <li>שינוי ריכוז</li>
+                    <li>שינוי נפח</li>
+                    <li>שינוי לחץ</li>
+                    <li>זרז</li>
+                    <li>טמפרטורה (היחיד שמשנה Kc!)</li>
+                </ul>
+            </>
+        );
+
+        const Slide5 = () => (
+            <>
+                <h2>שינוי ריכוז</h2>
+                <ul style={{fontSize:'24px', lineHeight:'2.2'}}>
+                    <li><strong>הוספת מגיב</strong> → התגובה קדימה (→)</li>
+                    <li><strong>הוספת תוצר</strong> → התגובה אחורה (←)</li>
+                    <li><strong>הסרת חומר</strong> → המערכת תנסה לייצר עוד</li>
+                </ul>
+            </>
+        );
+
+        const Slide6 = () => (
+            <>
+                <h2>שינוי נפח</h2>
+                <ul style={{fontSize:'24px', lineHeight:'2.2'}}>
+                    <li><strong>הקטנת נפח</strong> → כיוון פחות מולי גז</li>
+                    <li><strong>הגדלת נפח</strong> → כיוון יותר מולי גז</li>
+                </ul>
+            </>
+        );
+
+        const Slide7 = () => (
+            <>
+                <h2>שינוי לחץ</h2>
+                <p style={{fontSize:'24px'}}>זהה לשינוי נפח:</p>
+                <ul style={{fontSize:'24px', lineHeight:'2.2'}}>
+                    <li><strong>דחיסה</strong> (↑ לחץ) → כיוון פחות מולים</li>
+                    <li><strong>פתיחה</strong> (↓ לחץ) → כיוון יותר מולים</li>
+                </ul>
+            </>
+        );
+
+        const Slide8 = () => (
+            <>
+                <h2>זרז</h2>
+                <div style={{background:'#f44336', padding:'50px', borderRadius:'20px', border:'5px solid #000'}}>
+                    <div style={{fontSize:'26px', lineHeight:'2.2', fontWeight:'bold', color:'#fff'}}>
+                        <p>✅ זרז מאיץ את ההגעה לשיווי משקל</p>
+                        <p>❌ זרז לא משנה את Kc</p>
+                        <p>❌ זרז לא משנה את מיקום שיווי המשקל</p>
+                    </div>
+                </div>
+            </>
+        );
+
+        const Slide9 = () => (
+            <>
+                <h2>טמפרטורה</h2>
+                <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'30px'}}>
+                    <div style={{background:'#f44336', padding:'35px', borderRadius:'20px', border:'4px solid #000'}}>
+                        <h3 style={{fontSize:'30px', marginBottom:'20px', color:'#fff'}}>🔥 אקסותרמית</h3>
+                        <p style={{fontSize:'24px', color:'#fff'}}>↑ טמפ' → ↓ Kc</p>
+                    </div>
+                    <div style={{background:'#2196F3', padding:'35px', borderRadius:'20px', border:'4px solid #000'}}>
+                        <h3 style={{fontSize:'30px', marginBottom:'20px', color:'#fff'}}>❄️ אנדותרמית</h3>
+                        <p style={{fontSize:'24px', color:'#fff'}}>↑ טמפ' → ↑ Kc</p>
+                    </div>
+                </div>
+            </>
+        );
+
+        const GameSlide = () => {
+            const [reaction, setReaction] = useState('ammonia');
+            const [temp, setTemp] = useState(300);
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+
+            const reactions = {
+                ammonia: {
+                    name: 'סינתזת אמוניה',
+                    equation: 'N₂ + 3H₂ ⇄ 2NH₃',
+                    deltaH: -92,
+                    type: 'אקסותרמית',
+                    color: '#f44336'
+                },
+                no2: {
+                    name: 'פירוק N₂O₄',
+                    equation: 'N₂O₄ ⇄ 2NO₂',
+                    deltaH: 58,
+                    type: 'אנדותרמית',
+                    color: '#2196F3'
+                },
+                h2i2: {
+                    name: 'יצירת HI',
+                    equation: 'H₂ + I₂ ⇄ 2HI',
+                    deltaH: 10,
+                    type: 'אנדותרמית',
+                    color: '#9C27B0'
+                },
+                so3: {
+                    name: 'סינתזת SO₃',
+                    equation: '2SO₂ + O₂ ⇄ 2SO₃',
+                    deltaH: -198,
+                    type: 'אקסותרמית',
+                    color: '#FF5722'
+                },
+                pcl5: {
+                    name: 'פירוק PCl₅',
+                    equation: 'PCl₅ ⇄ PCl₃ + Cl₂',
+                    deltaH: 88,
+                    type: 'אנדותרמית',
+                    color: '#00BCD4'
+                }
+            };
+
+            const current = reactions[reaction];
+
+            const calculateKc = () => {
+                const base = 1.0;
+                const factor = current.deltaH < 0 
+                    ? Math.exp(-0.01 * (temp - 300))
+                    : Math.exp(0.01 * (temp - 300));
+                return (base * factor).toFixed(3);
+            };
+
+            const kc = calculateKc();
+
+            useEffect(() => {
+                if (chartRef.current) {
+                    const ctx = chartRef.current.getContext('2d');
+
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+
+                    const temps = [250, 300, 350, 400, 450];
+                    const kcValues = temps.map(t => {
+                        const f = current.deltaH < 0 
+                            ? Math.exp(-0.01 * (t - 300))
+                            : Math.exp(0.01 * (t - 300));
+                        return (1.0 * f).toFixed(3);
+                    });
+
+                    chartInstance.current = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: temps.map(t => `${t}K`),
+                            datasets: [{
+                                label: 'Kc',
+                                data: kcValues,
+                                borderColor: current.color,
+                                backgroundColor: current.color + '40',
+                                borderWidth: 5,
+                                pointRadius: 8,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#000',
+                                        font: { size: 18, weight: 'bold' }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    ticks: { color: '#000', font: { size: 16, weight: 'bold' } }
+                                },
+                                y: {
+                                    ticks: { color: '#000', font: { size: 16, weight: 'bold' } }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [reaction, current]);
+
+            return (
+                <>
+                    <h2 style={{textAlign:'center', marginBottom:'40px'}}>🎮 המשחק הגדול - 5 תגובות!</h2>
+
+                    <div className="game-panel">
+                        <h3>בחר תגובה:</h3>
+                        <select value={reaction} onChange={(e) => setReaction(e.target.value)} style={{marginTop:'20px'}}>
+                            {Object.entries(reactions).map(([key, r]) => (
+                                <option key={key} value={key}>{r.name}</option>
+                            ))}
+                        </select>
+
+                        <div className="equation-box" style={{marginTop:'30px'}}>
+                            {current.equation}
+                        </div>
+
+                        <div style={{textAlign:'center', marginTop:'20px', fontSize:'26px', fontWeight:'bold'}}>
+                            <span style={{color: current.color}}>
+                                {current.type} | ΔH = {current.deltaH} kJ/mol
+                            </span>
+                        </div>
+                    </div>
+
+                    <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'30px', marginTop:'40px'}}>
+                        <div>
+                            <div style={{margin:'30px 0'}}>
+                                <label className="slider-label">🌡️ טמפרטורה: {temp}K</label>
+                                <input type="range" min="250" max="450" step="10" value={temp} onChange={(e) => setTemp(+e.target.value)} />
+                            </div>
+
+                            <div className="result-box">
+                                <h3 style={{fontSize:'28px', marginBottom:'20px', color:'#000'}}>תוצאה:</h3>
+                                <div className="result-value">Kc = {kc}</div>
+                            </div>
+                        </div>
+
+                        <div className="game-panel">
+                            <h3 style={{textAlign:'center', marginBottom:'25px'}}>📈 גרף Kc</h3>
+                            <div style={{height:'300px'}}>
+                                <canvas ref={chartRef}></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{background:'#4CAF50', padding:'40px', borderRadius:'20px', border:'5px solid #000', marginTop:'40px'}}>
+                        <h3 style={{fontSize:'30px', marginBottom:'25px', color:'#000'}}>🎉 סיכום:</h3>
+                        <ul style={{fontSize:'24px', lineHeight:'2.2', color:'#000'}}>
+                            <li>✅ שיווי משקל דינמי</li>
+                            <li>✅ Kc תלוי רק בטמפרטורה</li>
+                            <li>✅ Q מראה את כיוון התגובה</li>
+                            <li>✅ עקרון לה שטלייה</li>
+                            <li>🎮 5 תגובות שונות במשחק!</li>
+                        </ul>
+                    </div>
+                </>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
